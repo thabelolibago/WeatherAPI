@@ -27,23 +27,37 @@ namespace WeatherV2API.Controllers
 			return Ok(cityDtos);
 		}
 
-		[HttpGet("{id}")]
+		[HttpGet("{id:int}")]
 		public async Task<IActionResult> GetCity(int id)
 		{
-			var city = await _cityRepository.GetCityByNameAsync(id.ToString()); // Example
-			if (city == null) return NotFound();
+			var city = await _cityRepository.GetCityByIdAsync(id);
+			if (city == null)
+			{
+				return NotFound(new { message = $"City with ID {id} not found." });
+			}
 
 			var cityDto = _mapper.Map<CityDto>(city);
 			return Ok(cityDto);
 		}
 
+
 		[HttpPost]
 		public async Task<IActionResult> CreateCity(CityDto cityDto)
 		{
-			var city = _mapper.Map<City>(cityDto);
-			await _cityRepository.AddCityAsync(city);
+			if (ModelState.IsValid)
+			{
+				var city = _mapper.Map<City>(cityDto);
+				await _cityRepository.AddCityAsync(city);
 
-			return CreatedAtAction(nameof(GetCity), new { id = city.Id }, cityDto);
+				return CreatedAtAction(nameof(GetCity), new { id = city.Id }, cityDto);
+
+			}
+			else
+			{
+				return BadRequest();
+			}
+
+			
 		}
 
 		[HttpPut("{id}")]
