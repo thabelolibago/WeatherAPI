@@ -24,6 +24,11 @@ namespace WeatherV2API.Repositories
 			return await _context.Cities.ToListAsync();
 		}
 
+		public async Task<City> GetCityByIdAsync(int cityId)
+		{
+			return await _context.Cities.FindAsync(cityId);
+		}
+
 		public async Task<City> AddCityAsync(City city)
 		{
 			_context.Cities.Add(city);

@@ -6,9 +6,12 @@ namespace WeatherV2API.Models.DTOs
 	{
 	
 		public int Id { get; set; }
-		[Required]
-		[MaxLength(25, ErrorMessage = "City's name must be a maximum of 25 characters.")]
+
+		[Required(ErrorMessage = "City name is required.")]
+		[MaxLength(25, ErrorMessage = "City name must not exceed 25 characters.")]
+		[MinLength(2, ErrorMessage = "City name must be at least 2 characters long.")]
 		public string Name { get; set; }
+
 		public string ImageUrl { get; set; }
 	}
 }
