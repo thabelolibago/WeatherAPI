@@ -21,7 +21,7 @@ namespace WeatherApi.Data
 				context.WeatherIcons.Add(new WeatherIcon
 				{
 					PrecipitationType = "Rain",
-					// Store file paths here, not IFormFile
+					
 					FilePathDayIcon = "/Images/WeatherIcons/DayIcons/rain.png",
 					FilePathNightIcon = "/Images/WeatherIcons/NightIcons/rain.png",
 				});

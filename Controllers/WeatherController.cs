@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WeatherV2API.Models.Domain;
 using WeatherV2API.Domain.Repositories;
 using WeatherV2API.Models.DTOs;
-using System.Threading.Tasks;
 using WeatherV2API.Repositories;
 
 namespace WeatherV2API.Controllers

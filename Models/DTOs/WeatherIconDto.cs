@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-
-namespace WeatherV2API.Models.DTO
+﻿namespace WeatherV2API.Models.DTO
 {
 	public class WeatherIconDto
 	{

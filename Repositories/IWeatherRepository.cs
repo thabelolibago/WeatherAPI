@@ -1,5 +1,4 @@
 ﻿using WeatherV2API.Models.Domain;
-using System.Threading.Tasks;
 
 namespace WeatherV2API.Domain.Repositories
 {

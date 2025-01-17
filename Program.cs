@@ -2,8 +2,6 @@ using WeatherV2API.Data;
 using Microsoft.EntityFrameworkCore;
 using WeatherV2API.Domain.Repositories;
 using WeatherV2API.Repositories;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Builder;
 using WeatherApi.Data;
 
 namespace WeatherV2API

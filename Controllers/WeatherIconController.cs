@@ -46,6 +46,26 @@ namespace WeatherV2API.Controllers
 			return Ok(weatherIcons);
 		}
 
+		[HttpGet("ById/{id}")]
+		public async Task<IActionResult> GetWeatherIconById(int id)
+		{
+			try
+			{
+				var weatherIcon = await _weatherIconRepository.GetWeatherIconByIdAsync(id);
+
+				if (weatherIcon == null)
+				{
+					return NotFound($"Weather icon with ID {id} not found.");
+				}
+
+				return Ok(weatherIcon);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Internal server error: {ex.Message}");
+			}
+		}
+
 		[HttpGet("{WeatherIconName}")]
 		public async Task<IActionResult> GetWeatherIconByName(string WeatherIconName)
 		{
@@ -76,6 +96,54 @@ namespace WeatherV2API.Controllers
 			}
 		}
 
+		[HttpPut("{id}")]
+		public async Task<IActionResult> UpdateWeatherIcon(int id, [FromForm] WeatherIconDto weatherIconDto)
+		{
+			if (weatherIconDto.DayIcon == null || weatherIconDto.NightIcon == null)
+			{
+				return BadRequest("Both Day and Night icons must be provided.");
+			}
+
+			try
+			{
+				var existingIcon = await _weatherIconRepository.GetWeatherIconByIdAsync(id);
+				if (existingIcon == null)
+				{
+					return NotFound($"No weather icon found with ID: {id}");
+				}
+
+				var updatedIcon = await _weatherIconRepository.UpdateWeatherIconAsync(id, weatherIconDto);
+				return Ok(updatedIcon);
+			}
+			catch (ArgumentException ex)
+			{
+				return BadRequest(ex.Message);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Internal server error: {ex.Message}");
+			}
+		}
+
+		[HttpDelete("{id}")]
+		public async Task<IActionResult> DeleteWeatherIcon(int id)
+		{
+			try
+			{
+				var existingIcon = await _weatherIconRepository.GetWeatherIconByIdAsync(id);
+				if (existingIcon == null)
+				{
+					return NotFound($"No weather icon found with ID: {id}");
+				}
+
+				await _weatherIconRepository.DeleteWeatherIconAsync(id);
+				return NoContent();
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Internal server error: {ex.Message}");
+			}
+		}
 
 
 
