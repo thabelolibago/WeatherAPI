@@ -92,19 +92,18 @@ namespace WeatherV2API.Controllers
 		}
 
 		[HttpPut("{id}")]
-		public async Task<IActionResult> UpdateCity(int id, [FromForm] CityDto cityDto, IFormFile imageFile)
+		public async Task<IActionResult> UpdateCity(int id, [FromForm] CityDto cityDto, IFormFile? imageFile)
 		{
-			// Check if the provided ID matches the city DTO ID
-			if (id != cityDto.Id)
-				return BadRequest("City ID mismatch.");
-
 			// Fetch the city to update from the repository
 			var city = await _cityRepository.GetCityByIdAsync(id);
 			if (city == null)
 				return NotFound();
 
-			// Update the city's name
-			city.Name = cityDto.Name;
+			// Update the city's name only if a new name is provided
+			if (!string.IsNullOrWhiteSpace(cityDto.Name))
+			{
+				city.Name = cityDto.Name;
+			}
 
 			// If a new image is uploaded, handle it
 			if (imageFile != null)
@@ -129,17 +128,13 @@ namespace WeatherV2API.Controllers
 				// Update the ImageUrl in the database with the new image path
 				city.ImageUrl = "/Images/Cities/" + imageFile.FileName;
 			}
-			else
-			{
-				// Remove the ImageUrl if no image is uploaded
-				city.ImageUrl = null;
-			}
 
 			// Save the updated city details to the repository
 			await _cityRepository.UpdateCityAsync(city);
 
 			return NoContent();
 		}
+
 
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> DeleteCity(int id)

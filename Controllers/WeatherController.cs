@@ -1,59 +1,47 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WeatherV2API.Data;
 using WeatherV2API.Models.Domain;
+using WeatherV2API.Domain.Repositories;
+using WeatherV2API.Models.DTOs;
+using System.Threading.Tasks;
+using WeatherV2API.Repositories;
 
-namespace WeatherApi.Controllers
+namespace WeatherV2API.Controllers
 {
+	[Route("api/[controller]")]
 	[ApiController]
-	[Route("api/weather")]
 	public class WeatherController : ControllerBase
 	{
-		private readonly WeatherDbContext _context;
-		private readonly HttpClient _httpClient;
-		private readonly string _openWeatherApiKey;
-		private readonly ILogger<WeatherController> _logger;
+		private readonly IWeatherRepository _weatherRepository;
+		private readonly ICityRepository _cityRepository;
 
-		public WeatherController(WeatherDbContext context, HttpClient httpClient,IConfiguration configuration, ILogger<WeatherController> logger)
+		public WeatherController(IWeatherRepository weatherRepository, ICityRepository cityRepository)
 		{
-			_context = context;
-			_httpClient = httpClient;
-			_openWeatherApiKey = configuration["OpenWeatherApi:ApiKey"];
-			_logger = logger;
+			_weatherRepository = weatherRepository;
+			_cityRepository = cityRepository;
 		}
 
 		[HttpGet("{cityName}")]
-		public async Task<IActionResult> GetWeather(string cityName)
+		public async Task<IActionResult> GetCityWeather(string cityName)
 		{
-			if (string.IsNullOrWhiteSpace(cityName))
-				return BadRequest("City name cannot be empty.");
+			var city = await _cityRepository.GetCityByNameAsync(cityName);
+			if (city == null)
+				return NotFound("City not found.");
 
-			var apiUrl = $"https://api.openweathermap.org/data/2.5/weather?q={cityName}&appid={_openWeatherApiKey}&units=metric";
+			var weatherData = await _weatherRepository.GetWeatherDataAsync(cityName);
 
-			try
+			var weatherResponseDto = new WeatherResponseDto
 			{
-				var weatherData = await _httpClient.GetFromJsonAsync<WeatherResponse>(apiUrl);
-				if (weatherData == null || weatherData.Main == null || weatherData.Wind == null)
-					return NotFound("City not found or weather data incomplete in OpenWeather API.");
+				City = city.Name,
+				ImageUrl = city.ImageUrl,
+				Temperature = weatherData.Main.Temp,
+				WindSpeed = weatherData.Wind.Speed,
+				Humidity = weatherData.Main.Humidity,
+				Pressure = weatherData.Main.Pressure
+			};
 
-				var city = await _context.Cities.FirstOrDefaultAsync(c => c.Name.ToLower() == cityName.ToLower());
-
-				return Ok(new
-				{
-					City = city?.Name ?? cityName,
-					ImageUrl = city?.ImageUrl,
-					Temperature = weatherData.Main.Temp,
-					WindSpeed = weatherData.Wind.Speed,
-					Humidity = weatherData.Main.Humidity,
-					Pressure = weatherData.Main.Pressure
-				});
-			}
-			catch (HttpRequestException ex)
-			{
-				_logger.LogError(ex, "Error fetching weather data for {CityName}", cityName);
-				return StatusCode(500, "Failed to fetch weather data. Please try again later.");
-			}
+			return Ok(weatherResponseDto);
 		}
+
+		
 	}
 }
-

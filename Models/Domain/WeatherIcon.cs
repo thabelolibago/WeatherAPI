@@ -4,13 +4,8 @@
 	{
 		public int Id { get; set; }
 		public string PrecipitationType { get; set; }
-		public string IconDayUrl { get; set; }
-		public string IconNightUrl { get; set; }
-
-		public int CityId { get; set; }
-
-		public City City { get; set; }
-		public int WeatherIconId { get; set; }
+		public string FilePathDayIcon { get; set; }
+		public string FilePathNightIcon { get; set; }
 	}
 }
 

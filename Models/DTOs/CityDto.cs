@@ -12,6 +12,6 @@ namespace WeatherV2API.Models.DTOs
 		[MinLength(2, ErrorMessage = "City name must be at least 2 characters long.")]
 		public string Name { get; set; }
 
-		public string ImageUrl { get; set; }
+		public string? ImageUrl { get; set; }
 	}
 }

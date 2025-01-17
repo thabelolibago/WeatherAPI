@@ -21,7 +21,7 @@ namespace WeatherV2API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("WeatherV2API.Models.City", b =>
+            modelBuilder.Entity("WeatherV2API.Models.Domain.City", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -42,7 +42,7 @@ namespace WeatherV2API.Migrations
                     b.ToTable("Cities");
                 });
 
-            modelBuilder.Entity("WeatherV2API.Models.WeatherIcon", b =>
+            modelBuilder.Entity("WeatherV2API.Models.Domain.WeatherIcon", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -50,14 +50,11 @@ namespace WeatherV2API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CityId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("IconDayUrl")
+                    b.Property<string>("FilePathDayIcon")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("IconNightUrl")
+                    b.Property<string>("FilePathNightIcon")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -67,25 +64,7 @@ namespace WeatherV2API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CityId");
-
                     b.ToTable("WeatherIcons");
-                });
-
-            modelBuilder.Entity("WeatherV2API.Models.WeatherIcon", b =>
-                {
-                    b.HasOne("WeatherV2API.Models.City", "City")
-                        .WithMany("WeatherIcons")
-                        .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("City");
-                });
-
-            modelBuilder.Entity("WeatherV2API.Models.City", b =>
-                {
-                    b.Navigation("WeatherIcons");
                 });
 #pragma warning restore 612, 618
         }

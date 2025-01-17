@@ -1,46 +1,104 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 using WeatherV2API.Data;
 using WeatherV2API.Models.Domain;
-using WeatherV2API.Repositories;
+using WeatherV2API.Models.DTO;
 
-namespace WeatherV2API.Domain.Repositories
+namespace WeatherV2API.Repositories
 {
 	public class WeatherIconRepository : IWeatherIconRepository
 	{
-		private readonly WeatherDbContext _context;
+		private readonly IWebHostEnvironment _webHostEnvironment;
+		private readonly IHttpContextAccessor _httpContextAccessor;
+		private readonly WeatherDbContext _weatherDbContext;
 
-		public WeatherIconRepository(WeatherDbContext context)
+		public WeatherIconRepository(IWebHostEnvironment webHostEnvironment,
+									  IHttpContextAccessor httpContextAccessor,
+									  WeatherDbContext weatherDbContext)
 		{
-			_context = context;
+			_webHostEnvironment = webHostEnvironment;
+			_httpContextAccessor = httpContextAccessor;
+			_weatherDbContext = weatherDbContext;
 		}
 
 		public async Task<List<WeatherIcon>> GetAllWeatherIconsAsync()
 		{
-			return await _context.WeatherIcons.ToListAsync();
+			return await _weatherDbContext.WeatherIcons.ToListAsync(); 
 		}
 
-		public async Task<WeatherIcon> AddWeatherIconAsync(WeatherIcon weatherIcon)
+		public async Task<WeatherIcon> GetWeatherIconByNameAsync(string weatherIconName)
 		{
-			_context.WeatherIcons.Add(weatherIcon);
-			await _context.SaveChangesAsync();
+			if (string.IsNullOrWhiteSpace(weatherIconName))
+			{
+				throw new ArgumentException("Weather icon name cannot be null or empty.", nameof(weatherIconName));
+			}
+
+			try
+			{
+				// Use case-insensitive comparison by converting to lowercase
+				var weatherIcon = await _weatherDbContext.WeatherIcons
+					.FirstOrDefaultAsync(wi => wi.PrecipitationType.ToLower() == weatherIconName.ToLower());
+
+				if (weatherIcon == null)
+				{
+					throw new KeyNotFoundException($"No weather icon found for precipitation type: {weatherIconName}");
+				}
+
+				return weatherIcon;
+			}
+			catch (Exception ex)
+			{
+				// Log and rethrow the exception
+				Console.WriteLine($"Error fetching weather icon: {ex.Message}");
+				throw;
+			}
+		}
+
+
+		public async Task<WeatherIcon> CreateWeatherIconAsync(WeatherIconDto weatherIconDto)
+		{
+			if (weatherIconDto.DayIcon == null || weatherIconDto.NightIcon == null)
+			{
+				throw new ArgumentException("Both Day and Night icons are required.");
+			}
+
+			var dayIconFolderPath = Path.Combine(_webHostEnvironment.WebRootPath, "Images", "WeatherIcons", "DayIcons");
+			var nightIconFolderPath = Path.Combine(_webHostEnvironment.WebRootPath, "Images", "WeatherIcons", "NightIcons");
+
+			if (!Directory.Exists(dayIconFolderPath)) Directory.CreateDirectory(dayIconFolderPath);
+			if (!Directory.Exists(nightIconFolderPath)) Directory.CreateDirectory(nightIconFolderPath);
+
+			var dayIconFilePath = Path.Combine(dayIconFolderPath, weatherIconDto.DayIcon.FileName);
+			var nightIconFilePath = Path.Combine(nightIconFolderPath, weatherIconDto.NightIcon.FileName);
+
+			using (var dayIconStream = new FileStream(dayIconFilePath, FileMode.Create))
+			{
+				await weatherIconDto.DayIcon.CopyToAsync(dayIconStream);
+			}
+
+			using (var nightStream = new FileStream(nightIconFilePath, FileMode.Create))
+			{
+				await weatherIconDto.NightIcon.CopyToAsync(nightStream);
+			}
+
+			var dayIconUrl = $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}/Images/WeatherIcons/DayIcons/{weatherIconDto.DayIcon.FileName}";
+			var nightIconUrl = $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}/Images/WeatherIcons/NightIcons/{weatherIconDto.NightIcon.FileName}";
+
+			var weatherIcon = new WeatherIcon
+			{
+				PrecipitationType = weatherIconDto.PrecipitationType,
+				FilePathDayIcon = dayIconUrl,
+				FilePathNightIcon = nightIconUrl
+			};
+
+			await _weatherDbContext.WeatherIcons.AddAsync(weatherIcon);
+			await _weatherDbContext.SaveChangesAsync();
+
 			return weatherIcon;
-		}
-
-		public async Task<WeatherIcon> UpdateWeatherIconAsync(WeatherIcon weatherIcon)
-		{
-			_context.WeatherIcons.Update(weatherIcon);
-			await _context.SaveChangesAsync();
-			return weatherIcon;
-		}
-
-		public async Task<bool> DeleteWeatherIconAsync(int weatherIconId)
-		{
-			var weatherIcon = await _context.WeatherIcons.FindAsync(weatherIconId);
-			if (weatherIcon == null) return false;
-
-			_context.WeatherIcons.Remove(weatherIcon);
-			await _context.SaveChangesAsync();
-			return true;
 		}
 	}
 }

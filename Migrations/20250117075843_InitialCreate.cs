@@ -31,35 +31,23 @@ namespace WeatherV2API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PrecipitationType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IconDayUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IconNightUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CityId = table.Column<int>(type: "int", nullable: false)
+                    FilePathDayIcon = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FilePathNightIcon = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WeatherIcons", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_WeatherIcons_Cities_CityId",
-                        column: x => x.CityId,
-                        principalTable: "Cities",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WeatherIcons_CityId",
-                table: "WeatherIcons",
-                column: "CityId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "WeatherIcons");
+                name: "Cities");
 
             migrationBuilder.DropTable(
-                name: "Cities");
+                name: "WeatherIcons");
         }
     }
 }

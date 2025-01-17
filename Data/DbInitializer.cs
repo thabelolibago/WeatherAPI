@@ -9,7 +9,6 @@ namespace WeatherApi.Data
 		{
 			if (!context.Cities.Any())
 			{
-				
 				var city = new City
 				{
 					Name = "Thohoyandou",
@@ -17,15 +16,14 @@ namespace WeatherApi.Data
 				};
 
 				context.Cities.Add(city);
-				context.SaveChanges(); 
+				context.SaveChanges();
 
-				
 				context.WeatherIcons.Add(new WeatherIcon
 				{
 					PrecipitationType = "Rain",
-					IconDayUrl = "/Icons/Day/rain.png",
-					IconNightUrl = "/Icons/Night/rain.png",
-					CityId = city.Id 
+					// Store file paths here, not IFormFile
+					FilePathDayIcon = "/Images/WeatherIcons/DayIcons/rain.png",
+					FilePathNightIcon = "/Images/WeatherIcons/NightIcons/rain.png",
 				});
 
 				context.SaveChanges();

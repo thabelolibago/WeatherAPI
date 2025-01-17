@@ -1,12 +1,12 @@
-﻿namespace WeatherV2API.Models.DTOs
+﻿using Microsoft.AspNetCore.Http;
+
+namespace WeatherV2API.Models.DTO
 {
 	public class WeatherIconDto
 	{
-		public int Id { get; set; }
+		public IFormFile DayIcon { get; set; }
+		public IFormFile NightIcon { get; set; }
 		public string PrecipitationType { get; set; }
-		public string IconDayUrl { get; set; }
-		public string IconNightUrl { get; set; }
-		public int CityId { get; set; }
-
 	}
 }
+

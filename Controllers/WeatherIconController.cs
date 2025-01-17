@@ -1,75 +1,83 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WeatherV2API.Data;
-using System.Threading.Tasks;
-using WeatherV2API.Models.Domain;
+using WeatherV2API.Repositories;
+using WeatherV2API.Models.DTO;
 
 namespace WeatherV2API.Controllers
 {
-	[Route("api/weathericons")]
 	[ApiController]
+	[Route("api/[controller]")]
 	public class WeatherIconController : ControllerBase
 	{
-		private readonly WeatherDbContext _context;
+		private readonly IWeatherIconRepository _weatherIconRepository;
 
-		public WeatherIconController(WeatherDbContext context)
+		public WeatherIconController(IWeatherIconRepository weatherIconRepository)
 		{
-			_context = context;
+			_weatherIconRepository = weatherIconRepository;
 		}
 
-		
-		[HttpGet]
-		public async Task<IActionResult> GetWeatherIcons()
+		[HttpPost("CreateWeatherIcon")]
+		public async Task<IActionResult> CreateWeatherIcon([FromForm] WeatherIconDto weatherIconDto)
 		{
-			var weatherIcons = await _context.WeatherIcons.ToListAsync();
+			if (weatherIconDto.DayIcon == null || weatherIconDto.NightIcon == null)
+			{
+				return BadRequest("Both Day and Night icons must be provided.");
+			}
+
+			try
+			{
+				var result = await _weatherIconRepository.CreateWeatherIconAsync(weatherIconDto);
+				return Ok(result);
+			}
+			catch (ArgumentException ex)
+			{
+				return BadRequest(ex.Message);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Internal server error: {ex.Message}");
+			}
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> GetAllWeatherIcons()
+		{
+			var weatherIcons = await _weatherIconRepository.GetAllWeatherIconsAsync();
+
 			return Ok(weatherIcons);
 		}
 
-		
-		[HttpGet("{id}")]
-		public async Task<IActionResult> GetWeatherIcon(int id)
+		[HttpGet("{WeatherIconName}")]
+		public async Task<IActionResult> GetWeatherIconByName(string WeatherIconName)
 		{
-			var weatherIcon = await _context.WeatherIcons.FindAsync(id);
-			if (weatherIcon == null)
-				return NotFound("Weather icon not found.");
+			if (string.IsNullOrWhiteSpace(WeatherIconName))
+			{
+				return BadRequest("Weather icon name cannot be null or empty.");
+			}
 
-			return Ok(weatherIcon);
+			try
+			{
+				
+				var weatherIcon = await _weatherIconRepository.GetWeatherIconByNameAsync(WeatherIconName);
+
+				if (weatherIcon == null)
+				{
+					return NotFound($"No weather icon found for name: {WeatherIconName}");
+				}
+
+				return Ok(weatherIcon);
+			}
+			catch (Exception ex)
+			{
+				
+				Console.WriteLine(ex.Message);
+
+				
+				return StatusCode(500, "An error occurred while processing your request.");
+			}
 		}
 
-		
-		[HttpPost]
-		public async Task<IActionResult> AddWeatherIcon([FromBody] WeatherIcon weatherIcon)
-		{
-			_context.WeatherIcons.Add(weatherIcon);
-			await _context.SaveChangesAsync();
-			return CreatedAtAction(nameof(GetWeatherIcon), new { id = weatherIcon.WeatherIconId }, weatherIcon);
-		}
 
-		
-		[HttpPut("{id}")]
-		public async Task<IActionResult> UpdateWeatherIcon(int id, [FromBody] WeatherIcon weatherIcon)
-		{
-			if (id != weatherIcon.WeatherIconId)
-				return BadRequest("Weather Icon ID mismatch.");
 
-			_context.Entry(weatherIcon).State = EntityState.Modified;
-			await _context.SaveChangesAsync();
 
-			return NoContent();
-		}
-
-		
-		[HttpDelete("{id}")]
-		public async Task<IActionResult> DeleteWeatherIcon(int id)
-		{
-			var weatherIcon = await _context.WeatherIcons.FindAsync(id);
-			if (weatherIcon == null)
-				return NotFound("Weather icon not found.");
-
-			_context.WeatherIcons.Remove(weatherIcon);
-			await _context.SaveChangesAsync();
-
-			return NoContent();
-		}
 	}
 }

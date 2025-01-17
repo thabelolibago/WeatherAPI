@@ -18,4 +18,57 @@
     <PackageReference Include="System.Net.Http.Json" Version="9.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\Images\Cities\Eastern Cape\East London.png" />
+    <None Include="wwwroot\Images\Cities\Eastern Cape\Gqeberha.png" />
+    <None Include="wwwroot\Images\Cities\Eastern Cape\Mthatha.png" />
+    <None Include="wwwroot\Images\Cities\FreeState\Bloemfontein.png" />
+    <None Include="wwwroot\Images\Cities\FreeState\Sasolburg.png" />
+    <None Include="wwwroot\Images\Cities\FreeState\Welkom.png" />
+    <None Include="wwwroot\Images\Cities\Gauteng\Benoni.png" />
+    <None Include="wwwroot\Images\Cities\Gauteng\Johannesburg.png" />
+    <None Include="wwwroot\Images\Cities\Gauteng\Midrand.png" />
+    <None Include="wwwroot\Images\Cities\Gauteng\Pretoria.png" />
+    <None Include="wwwroot\Images\Cities\Gauteng\Sandton.png" />
+    <None Include="wwwroot\Images\Cities\KwaZuluNatal\Durban.png" />
+    <None Include="wwwroot\Images\Cities\KwaZuluNatal\Newcastle.png" />
+    <None Include="wwwroot\Images\Cities\KwaZuluNatal\Pietermaritzburg.png" />
+    <None Include="wwwroot\Images\Cities\Limpopo\LouisTrichardt.png" />
+    <None Include="wwwroot\Images\Cities\Limpopo\Musina.png" />
+    <None Include="wwwroot\Images\Cities\Limpopo\Polokwane.png" />
+    <None Include="wwwroot\Images\Cities\Limpopo\PS5.png" />
+    <None Include="wwwroot\Images\Cities\Limpopo\Thohoyandou.png" />
+    <None Include="wwwroot\Images\Cities\Mpumalanga\eMalahleni.png" />
+    <None Include="wwwroot\Images\Cities\Mpumalanga\Mbombela .png" />
+    <None Include="wwwroot\Images\Cities\NorthernCape\Kimberley.png" />
+    <None Include="wwwroot\Images\Cities\NorthWest\Mahikeng.png" />
+    <None Include="wwwroot\Images\Cities\NorthWest\Rustenburg.png" />
+    <None Include="wwwroot\Images\Cities\NorthWest\Taung.png" />
+    <None Include="wwwroot\Images\Cities\WesternCape\CapeTown.png" />
+    <None Include="wwwroot\Images\Cities\WesternCape\Stellenbosch.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\broken-clouds.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\clear-day.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\few-clouds.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\mist.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\rain.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\scattered-clouds.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\shower-rain.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\snow.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\sun-sunny.png" />
+    <None Include="wwwroot\Images\WeatherIcons\DayIcons\thunderstom.png" />
+    <None Include="wwwroot\Images\WeatherIcons\NightIcons\broken-clouds.png" />
+    <None Include="wwwroot\Images\WeatherIcons\NightIcons\clear-night.png" />
+    <None Include="wwwroot\Images\WeatherIcons\NightIcons\few-clouds.png" />
+    <None Include="wwwroot\Images\WeatherIcons\NightIcons\mist.png" />
+    <None Include="wwwroot\Images\WeatherIcons\NightIcons\rain.png" />
+    <None Include="wwwroot\Images\WeatherIcons\NightIcons\scattered-clouds.png" />
+    <None Include="wwwroot\Images\WeatherIcons\NightIcons\shower-rain.png" />
+    <None Include="wwwroot\Images\WeatherIcons\NightIcons\snow.png" />
+    <None Include="wwwroot\Images\WeatherIcons\NightIcons\thunderstrom.png" />
+  </ItemGroup>
+
 </Project>

@@ -9,7 +9,7 @@ namespace WeatherV2API.Mappings
 		public AutoMapperProfiles() 
 		{
 			CreateMap<City, CityDto>().ReverseMap();
-			CreateMap<WeatherIcon, WeatherIconDto>().ReverseMap();
+			CreateMap<WeatherIcon, WeatherIcon>().ReverseMap();
 			CreateMap<WeatherResponse, WeatherResponseDto>().ReverseMap();
 		}
 		

@@ -2,9 +2,11 @@
 {
 	public class WeatherResponse
 	{
+
 		public List<WeatherCondition> Weather { get; set; }
 		public Weathermain Main { get; set; }
 		public WeatherWind Wind { get; set; }
+		public object Daily { get; internal set; }
 
 		public class WeatherCondition
 		{
