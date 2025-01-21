@@ -8,5 +8,7 @@
 		public float WindSpeed { get; set; }
 		public int Humidity { get; set; }
 		public int Pressure { get; set; }
+		public string Description { get; set; }  // Weather description
+		public string IconUrl { get; set; }     // URL for the weather icon
 	}
 }
