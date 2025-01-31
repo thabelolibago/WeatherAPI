@@ -92,13 +92,11 @@ namespace WeatherV2API.Controllers
 			return Ok(responseDto);
 		}
 
-
 		private string GetIconUrl(WeatherIcon icon)
 		{
 			var currentTime = DateTime.Now;
 			return (currentTime.Hour >= 6 && currentTime.Hour < 18) ? icon.FilePathDayIcon : icon.FilePathNightIcon;
 		}
-
 
 		private async Task<string> GetCityImageFromUnsplash(string cityName)
 		{
