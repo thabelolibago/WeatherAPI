@@ -6,5 +6,8 @@ namespace WeatherV2API.Domain.Repositories
 	{
 		Task<WeatherResponse> GetWeatherDataAsync(string cityName);
 		Task<City> GetCityByNameAsync(string cityName);
+		Task<WeatherResponse> GetTomorrowWeatherDataAsync(string cityName);
+
+
 	}
 }

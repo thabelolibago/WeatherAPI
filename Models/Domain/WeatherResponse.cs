@@ -6,7 +6,6 @@
 		public List<WeatherCondition> Weather { get; set; }
 		public Weathermain Main { get; set; }
 		public WeatherWind Wind { get; set; }
-		public object Daily { get; internal set; }
 
 		public class WeatherCondition
 		{
@@ -24,6 +23,14 @@
 		public class WeatherWind
 		{
 			public float Speed { get; set; }
+		}
+
+		public class WeatherForecastItem
+		{
+			public long Dt { get; set; }
+			public WeatherResponse.WeatherCondition[] Weather { get; set; }
+			public WeatherResponse.Weathermain Main { get; set; }
+			public WeatherResponse.WeatherWind Wind { get; set; }
 		}
 	}
 }

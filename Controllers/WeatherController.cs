@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Text.Json;
 using WeatherV2API.Domain.Repositories;
+using WeatherV2API.Models.Domain;
 using WeatherV2API.Models.DTOs;
 using WeatherV2API.Repositories;
 
@@ -34,58 +35,70 @@ namespace WeatherV2API.Controllers
 		[HttpGet("{cityName}")]
 		public async Task<IActionResult> GetCityWeather(string cityName)
 		{
-			// Step 1: Check if the city exists in the database
 			var city = await _cityRepository.GetCityByNameAsync(cityName);
-			string cityImageUrl = null;
+			string cityImageUrl = city?.ImageUrl ?? await GetCityImageFromUnsplash(cityName);
 
-			if (city != null)
+			if (cityImageUrl == null)
 			{
-				// City found in the database
-				cityImageUrl = city.ImageUrl;
-			}
-			else
-			{
-				// Step 2: Fetch city image from Unsplash API
-				cityImageUrl = await GetCityImageFromUnsplash(cityName);
-				if (cityImageUrl == null)
-				{
-					// If Unsplash also fails, return a NotFound response
-					return NotFound("City not found in the database, and no image is available from Unsplash.");
-				}
+				return NotFound("City not found in the database, and no image is available from Unsplash.");
 			}
 
-			// Step 3: Fetch weather data for the city
-			var weatherData = await _weatherRepository.GetWeatherDataAsync(cityName);
-			var weatherCondition = weatherData.Weather.FirstOrDefault();
+			var currentWeather = await _weatherRepository.GetWeatherDataAsync(cityName);
+			var tomorrowWeather = await _weatherRepository.GetTomorrowWeatherDataAsync(cityName);
 
-			// Step 4: Fetch the weather icon based on the weather condition
-			var weatherIcon = await _weatherIconRepository.GetWeatherIconByNameAsync(weatherCondition?.Main ?? "Clear");
-			if (weatherIcon == null)
+			if (currentWeather == null)
 			{
-				return NotFound($"No icon found for weather condition: {weatherCondition?.Main}");
+				return NotFound("Current weather data not available.");
 			}
 
-			// Determine the appropriate icon based on the time of day
-			var currentTime = DateTime.Now;
-			string iconUrl = (currentTime.Hour >= 6 && currentTime.Hour < 18)
-				? weatherIcon.FilePathDayIcon
-				: weatherIcon.FilePathNightIcon;
+			var currentCondition = currentWeather.Weather.FirstOrDefault();
+			var tomorrowCondition = tomorrowWeather?.Weather.FirstOrDefault();
 
-			// Step 5: Prepare the response DTO
-			var weatherResponseDto = new WeatherResponseDto
+			var currentIcon = await _weatherIconRepository.GetWeatherIconByNameAsync(currentCondition?.Main ?? "Clear");
+			var tomorrowIcon = await _weatherIconRepository.GetWeatherIconByNameAsync(tomorrowCondition?.Main ?? "Clear");
+
+			if (currentIcon == null || tomorrowIcon == null)
+			{
+				return NotFound("Weather icons not available.");
+			}
+
+			var currentIconUrl = GetIconUrl(currentIcon);
+			var tomorrowIconUrl = GetIconUrl(tomorrowIcon);
+
+			var responseDto = new WeatherFullResponseDto
 			{
 				City = cityName,
 				ImageUrl = cityImageUrl,
-				Temperature = weatherData.Main.Temp,
-				WindSpeed = weatherData.Wind.Speed,
-				Humidity = weatherData.Main.Humidity,
-				Pressure = weatherData.Main.Pressure,
-				Description = weatherCondition?.Description,
-				IconUrl = iconUrl
+				CurrentWeather = new WeatherResponseDto
+				{
+					Temperature = currentWeather.Main.Temp,
+					WindSpeed = currentWeather.Wind.Speed,
+					Humidity = currentWeather.Main.Humidity,
+					Pressure = currentWeather.Main.Pressure,
+					Description = currentCondition?.Description,
+					IconUrl = currentIconUrl
+				},
+				TomorrowWeather = tomorrowWeather != null ? new WeatherResponseDto
+				{
+					Temperature = tomorrowWeather.Main.Temp,
+					WindSpeed = tomorrowWeather.Wind.Speed,
+					Humidity = tomorrowWeather.Main.Humidity,
+					Pressure = tomorrowWeather.Main.Pressure,
+					Description = tomorrowCondition?.Description,
+					IconUrl = tomorrowIconUrl
+				} : null
 			};
 
-			return Ok(weatherResponseDto);
+			return Ok(responseDto);
 		}
+
+
+		private string GetIconUrl(WeatherIcon icon)
+		{
+			var currentTime = DateTime.Now;
+			return (currentTime.Hour >= 6 && currentTime.Hour < 18) ? icon.FilePathDayIcon : icon.FilePathNightIcon;
+		}
+
 
 		private async Task<string> GetCityImageFromUnsplash(string cityName)
 		{
@@ -111,5 +124,7 @@ namespace WeatherV2API.Controllers
 				return null; 
 			}
 		}
+
+		
 	}
 }
