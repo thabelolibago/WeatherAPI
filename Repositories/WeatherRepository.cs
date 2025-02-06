@@ -66,6 +66,21 @@ public class WeatherRepository : IWeatherRepository
 		}
 	}
 
+	public async Task<WeatherForecastResponse> GetSevenDayForecastAsync(string cityName)
+	{
+		var apiUrl = $"https://api.openweathermap.org/data/2.5/forecast?q={cityName}&appid={_openWeatherApiKey}&units=metric";
+
+		try
+		{
+			var weatherData = await _httpClient.GetFromJsonAsync<WeatherForecastResponse>(apiUrl);
+			return weatherData;
+		}
+		catch (HttpRequestException ex)
+		{
+			throw new Exception($"Failed to retrieve 7-day forecast data for city: {cityName}", ex);
+		}
+	}
+
 	public class WeatherForecastResponse
 	{
 		public List<WeatherForecastItem> List { get; set; }

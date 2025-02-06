@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading.Tasks;
 using WeatherV2API.Domain.Repositories;
 using WeatherV2API.Models.Domain;
 using WeatherV2API.Models.DTOs;
@@ -15,8 +16,8 @@ namespace WeatherV2API.Controllers
 		private readonly IWeatherRepository _weatherRepository;
 		private readonly ICityRepository _cityRepository;
 		private readonly IWeatherIconRepository _weatherIconRepository;
-		private readonly IHttpClientFactory _httpClientFactory; 
-		private readonly IConfiguration _configuration; 
+		private readonly IHttpClientFactory _httpClientFactory;
+		private readonly IConfiguration _configuration;
 
 		public WeatherController(
 			IWeatherRepository weatherRepository,
@@ -45,10 +46,12 @@ namespace WeatherV2API.Controllers
 
 			var currentWeather = await _weatherRepository.GetWeatherDataAsync(cityName);
 			var tomorrowWeather = await _weatherRepository.GetTomorrowWeatherDataAsync(cityName);
+			var location = await GetCityLocationAsync(cityName);
+			var sixDayForecast = await GetSixDayForecastAsync(cityName);
 
-			if (currentWeather == null)
+			if (currentWeather == null || sixDayForecast == null)
 			{
-				return NotFound("Current weather data not available.");
+				return NotFound("Weather data not available.");
 			}
 
 			var currentCondition = currentWeather.Weather.FirstOrDefault();
@@ -69,6 +72,8 @@ namespace WeatherV2API.Controllers
 			{
 				City = cityName,
 				ImageUrl = cityImageUrl,
+				Latitude = location?.Latitude ?? 0,
+				Longitude = location?.Longitude ?? 0,
 				CurrentWeather = new WeatherResponseDto
 				{
 					Temperature = currentWeather.Main.Temp,
@@ -86,10 +91,34 @@ namespace WeatherV2API.Controllers
 					Pressure = tomorrowWeather.Main.Pressure,
 					Description = tomorrowCondition?.Description,
 					IconUrl = tomorrowIconUrl
-				} : null
+				} : null,
+				SixDayForecast = sixDayForecast
 			};
 
 			return Ok(responseDto);
+		}
+
+		private async Task<(double Latitude, double Longitude)?> GetCityLocationAsync(string cityName)
+		{
+			var apiKey = _configuration["OpenWeatherApi:ApiKey"];
+			var client = _httpClientFactory.CreateClient();
+			var apiUrl = $"https://api.openweathermap.org/data/2.5/weather?q={cityName}&appid={apiKey}";
+
+			try
+			{
+				var response = await client.GetFromJsonAsync<WeatherResponse>(apiUrl);
+
+				if (response?.Coord != null)
+				{
+					return (response.Coord.Lat, response.Coord.Lon);
+				}
+
+				return null;
+			}
+			catch
+			{
+				return null;
+			}
 		}
 
 		private string GetIconUrl(WeatherIcon icon)
@@ -119,10 +148,54 @@ namespace WeatherV2API.Controllers
 			}
 			catch
 			{
-				return null; 
+				return null;
 			}
 		}
 
-		
+		private async Task<List<WeatherResponseDto>> GetSixDayForecastAsync(string cityName)
+		{
+			var forecastData = await _weatherRepository.GetSevenDayForecastAsync(cityName);
+
+			if (forecastData == null || forecastData.List == null)
+			{
+				return null;
+			}
+
+			var forecastResponse = new List<WeatherResponseDto>();
+
+			var today = DateTime.UtcNow.Date;
+
+			foreach (var forecast in forecastData.List
+				.GroupBy(f => DateTimeOffset.FromUnixTimeSeconds(f.Dt).UtcDateTime.Date)
+				.Where(g => g.Key >= today)
+				.Take(6))
+			{
+				var firstForecast = forecast.First();
+				var weatherCondition = firstForecast.Weather.FirstOrDefault()?.Main ?? "Clear";
+
+				var icon = await _weatherIconRepository.GetWeatherIconByNameAsync(weatherCondition);
+
+				if (icon == null)
+				{
+					return null;
+				}
+
+				var forecastTime = DateTimeOffset.FromUnixTimeSeconds(firstForecast.Dt).UtcDateTime;
+				var isDayTime = forecastTime.Hour >= 6 && forecastTime.Hour < 18;
+				var iconUrl = isDayTime ? icon.FilePathDayIcon : icon.FilePathNightIcon;
+
+				forecastResponse.Add(new WeatherResponseDto
+				{
+					Temperature = firstForecast.Main.Temp,
+					WindSpeed = firstForecast.Wind.Speed,
+					Humidity = firstForecast.Main.Humidity,
+					Pressure = firstForecast.Main.Pressure,
+					Description = firstForecast.Weather.FirstOrDefault()?.Description,
+					IconUrl = iconUrl
+				});
+			}
+
+			return forecastResponse;
+		}
 	}
 }
