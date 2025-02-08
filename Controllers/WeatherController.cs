@@ -65,8 +65,8 @@ namespace WeatherV2API.Controllers
 				return NotFound("Weather icons not available.");
 			}
 
-			var currentIconUrl = GetIconUrl(currentIcon);
-			var tomorrowIconUrl = GetIconUrl(tomorrowIcon);
+			var currentIconUrl = GetIconUrl(currentIcon); // Get correct icon path based on time of day
+			var tomorrowIconUrl = GetIconUrl(tomorrowIcon); // Same for tomorrow
 
 			var responseDto = new WeatherFullResponseDto
 			{
@@ -81,7 +81,7 @@ namespace WeatherV2API.Controllers
 					Humidity = currentWeather.Main.Humidity,
 					Pressure = currentWeather.Main.Pressure,
 					Description = currentCondition?.Description,
-					IconUrl = currentIconUrl
+					IconUrl = currentIconUrl // Return the correct icon URL
 				},
 				TomorrowWeather = tomorrowWeather != null ? new WeatherResponseDto
 				{
@@ -90,7 +90,7 @@ namespace WeatherV2API.Controllers
 					Humidity = tomorrowWeather.Main.Humidity,
 					Pressure = tomorrowWeather.Main.Pressure,
 					Description = tomorrowCondition?.Description,
-					IconUrl = tomorrowIconUrl
+					IconUrl = tomorrowIconUrl // Same for tomorrow's icon
 				} : null,
 				SixDayForecast = sixDayForecast
 			};
@@ -124,7 +124,14 @@ namespace WeatherV2API.Controllers
 		private string GetIconUrl(WeatherIcon icon)
 		{
 			var currentTime = DateTime.Now;
-			return (currentTime.Hour >= 6 && currentTime.Hour < 18) ? icon.FilePathDayIcon : icon.FilePathNightIcon;
+
+			// If currentTime hour is within daytime (6 AM to 6 PM)
+			if (currentTime.Hour >= 6 && currentTime.Hour < 18)
+			{
+				return icon.FilePathDayIcon;  // Return the daytime icon
+			}
+			// Otherwise, return the night icon
+			return icon.FilePathNightIcon;
 		}
 
 		private async Task<string> GetCityImageFromUnsplash(string cityName)
@@ -199,3 +206,4 @@ namespace WeatherV2API.Controllers
 		}
 	}
 }
+

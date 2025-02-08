@@ -2,7 +2,6 @@ using WeatherV2API.Data;
 using Microsoft.EntityFrameworkCore;
 using WeatherV2API.Domain.Repositories;
 using WeatherV2API.Repositories;
-using WeatherApi.Data;
 
 namespace WeatherV2API
 {
@@ -35,15 +34,20 @@ namespace WeatherV2API
 			// Add AutoMapper for DTO mapping
 			builder.Services.AddAutoMapper(typeof(Program));
 
+			// Add CORS policy
+			builder.Services.AddCors(options =>
+			{
+				options.AddPolicy("AllowAllOrigins", builder =>
+				{
+					builder.AllowAnyOrigin() // Allow requests from any origin
+						   .AllowAnyMethod() // Allow all HTTP methods (GET, POST, etc.)
+						   .AllowAnyHeader(); // Allow all headers
+				});
+			});
+
 			// Create the app instance
 			var app = builder.Build();
 
-			// Ensure that the database is seeded
-			using (IServiceScope scope = app.Services.CreateScope())
-			{
-				var dbContext = scope.ServiceProvider.GetRequiredService<WeatherDbContext>();
-				DbInitializer.Seed(dbContext);
-			}
 
 			// Add static files middleware to serve files from wwwroot
 			app.UseStaticFiles(); // This serves files from wwwroot (like images)
@@ -58,6 +62,9 @@ namespace WeatherV2API
 			// Enable HTTPS redirection and Authorization
 			app.UseHttpsRedirection();
 			app.UseAuthorization();
+
+			// Enable CORS
+			app.UseCors("AllowAllOrigins");
 
 			// Map the controllers (API routes)
 			app.MapControllers();
