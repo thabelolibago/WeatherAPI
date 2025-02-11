@@ -31,13 +31,10 @@ namespace WeatherV2API.Controllers
 		public async Task<IActionResult> GetCityById(int id)
 		{
 			var city = await _cityRepository.GetCityByIdAsync(id);
-
 			if (city == null)
 				return NotFound();
-
 			return Ok(city);
 		}
-
 
 		[HttpGet]
 		public async Task<IActionResult> GetAllCities()
@@ -52,10 +49,7 @@ namespace WeatherV2API.Controllers
 			// Check if the city already exists
 			var existingCity = await _cityRepository.GetCityByNameAsync(cityDto.Name);
 			if (existingCity != null)
-			{
-				// If the city exists, return a Conflict (409) response
 				return Conflict(new { message = "City already exists." });
-			}
 
 			if (!ModelState.IsValid)
 				return BadRequest(ModelState);
@@ -69,30 +63,28 @@ namespace WeatherV2API.Controllers
 			if (imageFile != null)
 			{
 				if (string.IsNullOrEmpty(imageFile.FileName))
-				{
 					return BadRequest("Image file name is not provided.");
-				}
 
-				// Use the provided province or set a default one
+				// Use provided province or set a default one
 				var province = string.IsNullOrEmpty(cityDto.Province) ? "DefaultProvince" : cityDto.Province;
 
 				// Create the folder path based on the province
 				var cityFolder = Path.Combine(_env.WebRootPath, "Images", "Cities", province);
 
 				if (!Directory.Exists(cityFolder))
-				{
 					Directory.CreateDirectory(cityFolder);
-				}
 
-				// Save the image file with a unique name (e.g., using the city name)
-				var imagePath = Path.Combine(cityFolder, cityDto.Name + Path.GetExtension(imageFile.FileName));
+				// Save the image file with a unique name
+				var fileName = cityDto.Name + Path.GetExtension(imageFile.FileName);
+				var imagePath = Path.Combine(cityFolder, fileName);
 
 				using (var stream = new FileStream(imagePath, FileMode.Create))
 				{
 					await imageFile.CopyToAsync(stream);
 				}
 
-				city.ImageUrl = $"/Images/Cities/{province}/{cityDto.Name}{Path.GetExtension(imageFile.FileName)}";
+				// Store absolute URL instead of relative path
+				city.ImageUrl = $"{Request.Scheme}://{Request.Host}/Images/Cities/{province}/{fileName}";
 			}
 
 			// Add the city to the database
@@ -102,63 +94,63 @@ namespace WeatherV2API.Controllers
 			return CreatedAtAction(nameof(GetCityByName), new { cityName = city.Name }, city);
 		}
 
-
-
 		[HttpPut("{id}")]
 		public async Task<IActionResult> UpdateCity(int id, [FromForm] CityDto cityDto, IFormFile? imageFile)
 		{
-			
 			var city = await _cityRepository.GetCityByIdAsync(id);
 			if (city == null)
 				return NotFound();
 
-			
 			if (!string.IsNullOrWhiteSpace(cityDto.Name))
-			{
 				city.Name = cityDto.Name;
-			}
 
-			
 			if (imageFile != null)
 			{
-				
+				// Ensure province is set
+				var province = string.IsNullOrEmpty(cityDto.Province) ? "DefaultProvince" : cityDto.Province;
+
+				// Delete old image if exists
 				if (!string.IsNullOrEmpty(city.ImageUrl))
 				{
-					var oldFilePath = Path.Combine(_env.WebRootPath, city.ImageUrl.TrimStart('/'));
+					var oldFilePath = Path.Combine(_env.WebRootPath, "Images", "Cities", province, Path.GetFileName(city.ImageUrl));
 					if (System.IO.File.Exists(oldFilePath))
-					{
-						System.IO.File.Delete(oldFilePath); 
-					}
+						System.IO.File.Delete(oldFilePath);
 				}
 
-				
-				var newImagePath = Path.Combine(_env.WebRootPath, "Images", "Cities", imageFile.FileName);
-				using (var stream = new FileStream(newImagePath, FileMode.Create))
+				// Save new image
+				var fileName = cityDto.Name + Path.GetExtension(imageFile.FileName);
+				var imagePath = Path.Combine(_env.WebRootPath, "Images", "Cities", province, fileName);
+
+				using (var stream = new FileStream(imagePath, FileMode.Create))
 				{
-					await imageFile.CopyToAsync(stream); 
+					await imageFile.CopyToAsync(stream);
 				}
 
-				
-				city.ImageUrl = "/Images/Cities/" + imageFile.FileName;
+				// Store absolute URL instead of relative path
+				city.ImageUrl = $"{Request.Scheme}://{Request.Host}/Images/Cities/{province}/{fileName}";
 			}
 
-			
 			await _cityRepository.UpdateCityAsync(city);
-
 			return NoContent();
 		}
-
 
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> DeleteCity(int id)
 		{
 			var city = await _cityRepository.GetCityByIdAsync(id);
-
 			if (city == null)
 				return NotFound();
 
-			await _cityRepository.DeleteCityAsync(city.Id);
+			// Delete the city image if it exists
+			if (!string.IsNullOrEmpty(city.ImageUrl))
+			{
+				var province = city.ImageUrl.Split("/")[4]; // Extract province from URL
+				var imagePath = Path.Combine(_env.WebRootPath, "Images", "Cities", province, Path.GetFileName(city.ImageUrl));
+				if (System.IO.File.Exists(imagePath))
+					System.IO.File.Delete(imagePath);
+			}
 
+			await _cityRepository.DeleteCityAsync(city.Id);
 			return NoContent();
 		}
 	}
